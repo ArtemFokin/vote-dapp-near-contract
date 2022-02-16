@@ -20,7 +20,8 @@
     "asbuild": "^0.2.0",
     "assemblyscript": "^0.19.23",
     "near-cli": "^3.2.0",
-    "near-sdk-as": "^3.2.3"
+    "near-sdk-as": "^3.2.3",
+    "typescript": "^4.5.5"
   },
   "devDependencies": {
     "assemblyscript": "^0.19.23"
