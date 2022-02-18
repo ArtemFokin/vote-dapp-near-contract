@@ -2,16 +2,27 @@
 
 import { Vote } from "./models/Vote";
 import { Option } from "./models/Option";
-import { Pool, PoolConstructorParameters } from "./models/Pool";
+import { Pool } from "./models/Pool";
+import { context } from "near-sdk-as";
 
-export function createPool(
-  poolProps: PoolConstructorParameters,
-  optionsProps: Option["value"][]
-): { pool: Pool; options: Option[] } {
-  const pool = Pool.insert(poolProps);
-  const options = optionsProps.map((optionProp) =>
-    Option.insert(pool.id, optionProp)
-  );
+class PoolWithOptions {
+  pool: Pool;
+  options: Option[];
+}
+
+export function createPoolWithOptions(
+  name: string,
+  question: string,
+  optionsValues: string[],
+  deleted: boolean = false
+): PoolWithOptions {
+  const pool = Pool.insert(name, question, deleted);
+  const poolId: u32 = pool.id;
+  const options: Option[] = [];
+  for (let i: i32 = 0; i < optionsValues.length; i++) {
+    const option = Option.insert(poolId, optionsValues[i]);
+    options.push(option);
+  }
 
   return {
     pool,
@@ -19,7 +30,7 @@ export function createPool(
   };
 }
 
-export function getPool(id: Pool["id"]): Pool {
+export function getPool(id: u32): Pool {
   return Pool.getSome(id);
 }
 
@@ -37,10 +48,24 @@ export function getPoolsList(offset: u32, limit: u32): Pool[] {
 
 export function getPoolOptions(poolId: u32): Option[] {
   const pool = Pool.getSome(poolId);
-  return pool.options.map((option) => Option.getSome(option));
+  return pool.options.map<Option>((option) => Option.getSome(option));
 }
 
 export function getPoolVotes(poolId: u32): Vote[] {
-  const poolOptions = getPoolOptions(poolId).map((op) => op.id);
-  return poolOptions.map((option) => Vote.getSome(option));
+  const options = getPoolOptions(poolId);
+  // почему-то flat возвращает пустой массив
+  const result: Vote[] = [];
+  for (let i: i32 = 0; i < options.length; i++) {
+    const optionVotesIds = options[i].votes;
+    for (let j: i32 = 0; j < optionVotesIds.length; j++) {
+      const vote = Vote.getSome(optionVotesIds[j]);
+      result.push(vote);
+    }
+  }
+  return result;
+}
+
+export function checkAccountVote(poolId: u32): boolean {
+  const votes = getPoolVotes(poolId);
+  return !!votes.some((vote) => vote.owner == context.sender);
 }

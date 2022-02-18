@@ -3,6 +3,7 @@ import { Option } from "./Option";
 
 const votes = new PersistentUnorderedMap<u32, Vote>("v");
 
+@nearBindgen
 export class Vote {
   id: u32;
   owner: string;
@@ -11,10 +12,10 @@ export class Vote {
   constructor(optionId: u32) {
     this.owner = context.sender;
     this.optionId = optionId;
-    this.id = math.hash32<string>(optionId + this.owner);
+    this.id = math.hash32<string>(optionId.toString() + this.owner);
   }
 
-  static insert(optionId: u32) {
+  static insert(optionId: u32): Vote {
     const vote = new Vote(optionId);
     if (Vote.get(vote.id)) {
       throw new Error("Vote already exist");
@@ -24,11 +25,11 @@ export class Vote {
     return vote;
   }
 
-  static get(id: u32) {
+  static get(id: u32): Vote | null {
     return votes.get(id);
   }
 
-  static getSome(id: u32) {
+  static getSome(id: u32): Vote {
     return votes.getSome(id);
   }
 }

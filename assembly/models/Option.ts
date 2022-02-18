@@ -4,19 +4,20 @@ import { Pool } from "./Pool";
 
 export const options = new PersistentUnorderedMap<u32, Option>("o");
 
+@nearBindgen
 export class Option {
   id: u32;
   poolId: u32;
   value: string;
-  votes: Vote["id"][] = [];
+  votes: u32[] = [];
 
   constructor(poolId: u32, value: string) {
-    this.id = math.hash32<string>(poolId + value);
+    this.id = math.hash32<string>(poolId.toString() + value);
     this.poolId = poolId;
     this.value = value;
   }
 
-  static insert(poolId: u32, value: string) {
+  static insert(poolId: u32, value: string): Option {
     const option = new Option(poolId, value);
     if (Option.get(option.id)) {
       throw new Error("Option already exist");
@@ -26,21 +27,21 @@ export class Option {
     return option;
   }
 
-  static remove(id: u32) {
+  static remove(id: u32): void {
     const option = Option.getSome(id);
     Pool.removeOption(option.poolId, option.id);
     options.delete(id);
   }
 
-  static get(id: u32) {
+  static get(id: u32): Option | null {
     return options.get(id);
   }
 
-  static getSome(id: u32) {
+  static getSome(id: u32): Option {
     return options.getSome(id);
   }
 
-  static addVote(id: u32, voteId: u32) {
+  static addVote(id: u32, voteId: u32): void {
     const option = Option.getSome(id);
 
     if (option.votes.includes(voteId)) {
