@@ -3,7 +3,7 @@
 import { Vote } from "./models/Vote";
 import { Option } from "./models/Option";
 import { Pool } from "./models/Pool";
-import { context } from "near-sdk-as";
+import { AccountId } from "./utils";
 
 class PoolWithOptions {
   pool: Pool;
@@ -17,10 +17,10 @@ export function createPoolWithOptions(
   deleted: boolean = false
 ): PoolWithOptions {
   const pool = Pool.insert(name, question, deleted);
-  const poolId: u32 = pool.id;
+
   const options: Option[] = [];
-  for (let i: i32 = 0; i < optionsValues.length; i++) {
-    const option = Option.insert(poolId, optionsValues[i]);
+  for (let i = 0; i < optionsValues.length; i++) {
+    const option = Option.insert(pool.id, optionsValues[i]);
     options.push(option);
   }
 
@@ -48,24 +48,35 @@ export function getPoolsList(offset: u32, limit: u32): Pool[] {
 
 export function getPoolOptions(poolId: u32): Option[] {
   const pool = Pool.getSome(poolId);
-  return pool.options.map<Option>((option) => Option.getSome(option));
+  return Option.getByPool(pool.id);
 }
 
-export function getPoolVotes(poolId: u32): Vote[] {
+// how to protect, only account with vote in this pool can view
+function _getPoolVotes(poolId: u32): Vote[] {
   const options = getPoolOptions(poolId);
-  // почему-то flat возвращает пустой массив
-  const result: Vote[] = [];
-  for (let i: i32 = 0; i < options.length; i++) {
-    const optionVotesIds = options[i].votes;
-    for (let j: i32 = 0; j < optionVotesIds.length; j++) {
-      const vote = Vote.getSome(optionVotesIds[j]);
-      result.push(vote);
-    }
+  let result: Vote[] = [];
+
+  for (let i = 0; i < options.length; i++) {
+    const option = options[i];
+    const votes = Vote.getOptionVotes(option.id);
+    result = result.concat(votes);
   }
   return result;
 }
 
-export function checkAccountVote(poolId: u32): boolean {
-  const votes = getPoolVotes(poolId);
-  return !!votes.some((vote) => vote.owner == context.sender);
+export function getPoolVotes(poolId: u32, accountId: AccountId): Vote[] {
+  if (checkAccountVote(poolId, accountId)) {
+    return _getPoolVotes(poolId);
+  }
+  return [];
+}
+
+export function checkAccountVote(poolId: u32, accountId: AccountId): boolean {
+  const votes = _getPoolVotes(poolId);
+  for (let i = 0; i < votes.length; i++) {
+    if (votes[i].owner == accountId) {
+      return true;
+    }
+  }
+  return false;
 }

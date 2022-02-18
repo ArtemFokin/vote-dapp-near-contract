@@ -1,5 +1,4 @@
 import { PersistentUnorderedMap, context, math } from "near-sdk-as";
-import { Option } from "./Option";
 
 import { AccountId } from "../utils";
 
@@ -11,8 +10,8 @@ export class Pool {
   name: string;
   question: string;
   owner: AccountId;
+  anonimous: boolean;
   deleted: boolean;
-  options: u32[] = [];
 
   constructor(name: string, question: string, deleted: boolean = false) {
     this.owner = context.sender;
@@ -46,23 +45,6 @@ export class Pool {
   static markAsDeleted(id: u32): void {
     const pool = Pool.getSome(id);
     pool.deleted = true;
-    pools.set(pool.id, pool);
-  }
-
-  static addOption(id: u32, optionId: u32): void {
-    const pool = Pool.getSome(id);
-
-    if (pool.options.includes(optionId)) {
-      throw new Error("Option already exist");
-    }
-
-    pool.options.push(optionId);
-    pools.set(pool.id, pool);
-  }
-
-  static removeOption(id: u32, optionId: u32): void {
-    const pool = Pool.getSome(id);
-    pool.options = pool.options.filter((op) => op === optionId);
     pools.set(pool.id, pool);
   }
 }
