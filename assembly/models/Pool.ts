@@ -19,13 +19,13 @@ export class Pool {
     this.question = question;
     this.deleted = deleted;
     this.id = math.hash32<string>(this.name + this.owner);
+    if (Pool.get(this.id)) {
+      throw new Error("Pool already exist");
+    }
   }
 
   static insert(name: string, question: string, deleted?: boolean): Pool {
     const pool = new Pool(name, question, deleted);
-    if (Pool.get(pool.id)) {
-      throw new Error("Pool already exist");
-    }
     pools.set(pool.id, pool);
     return pool;
   }
@@ -39,7 +39,7 @@ export class Pool {
   }
 
   static getList(offset: u32, limit: u32): Pool[] {
-    return pools.values(offset, offset + limit);
+    return pools.values(offset, offset + limit).filter((v) => !v.deleted);
   }
 
   static markAsDeleted(id: u32): void {
