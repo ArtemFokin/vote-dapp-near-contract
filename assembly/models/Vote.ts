@@ -1,6 +1,6 @@
 import { PersistentUnorderedMap, math, context } from "near-sdk-as";
 
-const votes = new PersistentUnorderedMap<u32, Vote>("v");
+export const votes = new PersistentUnorderedMap<u32, Vote>("v");
 
 @nearBindgen
 export class Vote {

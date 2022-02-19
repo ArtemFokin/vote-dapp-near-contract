@@ -13,7 +13,7 @@ export class Pool {
   anonimous: boolean;
   deleted: boolean;
 
-  constructor(name: string, question: string, deleted: boolean = false) {
+  constructor(name: string, question: string, deleted: boolean) {
     this.owner = context.sender;
     this.name = name;
     this.question = question;
@@ -24,7 +24,11 @@ export class Pool {
     }
   }
 
-  static insert(name: string, question: string, deleted?: boolean): Pool {
+  static insert(
+    name: string,
+    question: string,
+    deleted: boolean = false
+  ): Pool {
     const pool = new Pool(name, question, deleted);
     pools.set(pool.id, pool);
     return pool;
