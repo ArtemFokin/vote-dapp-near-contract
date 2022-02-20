@@ -1,10 +1,6 @@
-import { VMContext } from "near-sdk-as";
 import { Pool, pools } from "../models/Pool";
 
 describe("Pool model", () => {
-  beforeAll(() => {
-    VMContext.setCurrent_account_id("test");
-  });
   it("Insert - should add item to pools storage", () => {
     const pool = Pool.insert("pool 1", "is it pool 1 ?");
     expect(pools.values()[0]).toStrictEqual(pool);

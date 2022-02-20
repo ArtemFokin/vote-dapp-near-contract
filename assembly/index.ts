@@ -4,6 +4,7 @@ import { Vote } from "./models/Vote";
 import { Option } from "./models/Option";
 import { Pool } from "./models/Pool";
 import { AccountId } from "./utils";
+import { _getPoolVotes } from "./helpers";
 
 class PoolWithOptions {
   pool: Pool;
@@ -49,19 +50,6 @@ export function getPoolsList(offset: u32, limit: u32): Pool[] {
 export function getPoolOptions(poolId: u32): Option[] {
   const pool = Pool.getSome(poolId);
   return Option.getByPool(pool.id);
-}
-
-// how to protect, only account with vote in this pool can view
-function _getPoolVotes(poolId: u32): Vote[] {
-  const options = getPoolOptions(poolId);
-  let result: Vote[] = [];
-
-  for (let i = 0; i < options.length; i++) {
-    const option = options[i];
-    const votes = Vote.getOptionVotes(option.id);
-    result = result.concat(votes);
-  }
-  return result;
 }
 
 export function getPoolVotes(poolId: u32, accountId: AccountId): Vote[] {
